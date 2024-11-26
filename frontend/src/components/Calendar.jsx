@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Box, Button, Container, Typography } from '@mui/material';
+import { Box, Button, Container, Typography, AppBar, Toolbar } from '@mui/material';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -8,8 +8,11 @@ import { eventService } from '../services/api';
 import EventForm from './EventForm';
 import EventDetails from './EventDetails';
 import toast from 'react-hot-toast';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useAuth } from '../context/AuthContext';
 
 const Calendar = () => {
+  const {logout} = useAuth();
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -139,82 +142,101 @@ const Calendar = () => {
     setIsFormOpen(true);
   };
 
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ mt: 4 }}>
-        <Button
-          variant="contained"
-          onClick={() => {
-            setSelectedEvent(null);
-            setIsFormOpen(true);
-          }}
-          sx={{ mb: 2 }}
-        >
-          Create Event
-        </Button>
+    <>
+      <AppBar position="static" sx={{ mb: 2 }}>
+        <Toolbar sx={{ justifyContent: 'space-between' }}>
+          <Typography variant="h6">Calendar App</Typography>
+          <Button 
+            color="inherit" 
+            onClick={handleLogout}
+            startIcon={<LogoutIcon />}
+          >
+            Logout
+          </Button>
+        </Toolbar>
+      </AppBar>
 
-        <FullCalendar
-          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="dayGridMonth"
-          headerToolbar={{
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-          }}
-          events={events}
-          editable={true}
-          selectable={true}
-          selectMirror={true}
-          dayMaxEvents={true}
-          weekends={true}
-          select={handleDateSelect}
-          eventClick={handleEventClick}
-          selectConstraint={{
-            start: new Date().toISOString()
-          }}
-          eventContent={(eventInfo) => (
-            <Box sx={{ 
-              p: '2px 4px', 
-              cursor: 'pointer',
-              '&:hover': { opacity: 0.9 }
-            }}>
-              <Typography variant="subtitle2" noWrap>
-                {eventInfo.event.title}
-              </Typography>
-              {eventInfo.timeText && (
-                <Typography variant="caption" display="block">
-                  {eventInfo.timeText}
+      <Container maxWidth="lg">
+        <Box sx={{ mt: 4 }}>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setSelectedEvent(null);
+              setIsFormOpen(true);
+            }}
+            sx={{ mb: 2 }}
+          >
+            Create Event
+          </Button>
+
+          <FullCalendar
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView="dayGridMonth"
+            headerToolbar={{
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            }}
+            events={events}
+            editable={true}
+            selectable={true}
+            selectMirror={true}
+            dayMaxEvents={true}
+            weekends={true}
+            select={handleDateSelect}
+            eventClick={handleEventClick}
+            selectConstraint={{
+              start: new Date().toISOString()
+            }}
+            eventContent={(eventInfo) => (
+              <Box sx={{ 
+                p: '2px 4px', 
+                cursor: 'pointer',
+                '&:hover': { opacity: 0.9 }
+              }}>
+                <Typography variant="subtitle2" noWrap>
+                  {eventInfo.event.title}
                 </Typography>
-              )}
-            </Box>
-          )}
-        />
+                {eventInfo.timeText && (
+                  <Typography variant="caption" display="block">
+                    {eventInfo.timeText}
+                  </Typography>
+                )}
+              </Box>
+            )}
+          />
 
-        {/* Event Form Dialog */}
-        <EventForm
-          open={isFormOpen}
-          onClose={() => {
-            setIsFormOpen(false);
-            setSelectedEvent(null);
-          }}
-          onSubmit={handleEventSubmit}
-          event={selectedEvent}
-          isNewEvent={!selectedEvent?.id}
-        />
+          {/* Event Form Dialog */}
+          <EventForm
+            open={isFormOpen}
+            onClose={() => {
+              setIsFormOpen(false);
+              setSelectedEvent(null);
+            }}
+            onSubmit={handleEventSubmit}
+            event={selectedEvent}
+            isNewEvent={!selectedEvent?.id}
+          />
 
-        {/* Event Details Dialog */}
-        <EventDetails
-          open={isDetailsOpen}
-          event={selectedEvent}
-          onClose={() => {
-            setIsDetailsOpen(false);
-            setSelectedEvent(null);
-          }}
-          onEdit={handleEditClick}
-          onDelete={handleEventDelete}
-        />
-      </Box>
-    </Container>
+          {/* Event Details Dialog */}
+          <EventDetails
+            open={isDetailsOpen}
+            event={selectedEvent}
+            onClose={() => {
+              setIsDetailsOpen(false);
+              setSelectedEvent(null);
+            }}
+            onEdit={handleEditClick}
+            onDelete={handleEventDelete}
+          />
+        </Box>
+      </Container>
+    </>
   );
 };
 
