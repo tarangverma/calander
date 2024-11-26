@@ -46,10 +46,13 @@ const Calendar = () => {
 
   const handleEventSubmit = async (eventData) => {
     try {
-      if (selectedEvent) {
+      // Check if it's a new event by checking for isNew flag
+      if (selectedEvent && !selectedEvent.isNew) {
+        // This is an update operation
         await eventService.updateEvent(selectedEvent.id, eventData);
         toast.success('Event updated successfully');
       } else {
+        // This is a create operation
         await eventService.createEvent(eventData);
         toast.success('Event created successfully');
       }
@@ -76,7 +79,43 @@ const Calendar = () => {
   };
 
   const handleDateSelect = (selectInfo) => {
-    setSelectedEvent(null);
+    console.log('Date selected:', selectInfo);
+
+    // Get the selected date
+    const selectedDate = new Date(selectInfo.start);
+    
+    // Check if there are any events on this date
+    const existingEvents = events.filter(event => {
+      const eventDate = new Date(event.start);
+      return eventDate.toDateString() === selectedDate.toDateString();
+    });
+
+    if (existingEvents.length > 0) {
+      toast.info('Events already exist on this date. Please select another date or edit existing events.');
+      return;
+    }
+    
+    // Set default times for the selected date (9 AM - 10 AM)
+    const startTime = new Date(selectedDate);
+    startTime.setHours(9, 0, 0);
+    
+    const endTime = new Date(selectedDate);
+    endTime.setHours(10, 0, 0);
+    
+    const reminderTime = new Date(startTime);
+    reminderTime.setMinutes(reminderTime.getMinutes() - 30);
+
+    // Create a new empty event with just the times
+    const newEvent = {
+      title: '',
+      description: '',
+      start_time: startTime,
+      end_time: endTime,
+      reminder_time: reminderTime,
+      isNew: true
+    };
+
+    setSelectedEvent(newEvent);
     setIsFormOpen(true);
   };
 
@@ -128,7 +167,11 @@ const Calendar = () => {
           selectMirror={true}
           dayMaxEvents={true}
           weekends={true}
+          select={handleDateSelect}
           eventClick={handleEventClick}
+          selectConstraint={{
+            start: new Date().toISOString()
+          }}
           eventContent={(eventInfo) => (
             <Box sx={{ 
               p: '2px 4px', 
@@ -152,10 +195,11 @@ const Calendar = () => {
           open={isFormOpen}
           onClose={() => {
             setIsFormOpen(false);
-            !isDetailsOpen && setSelectedEvent(null);
+            setSelectedEvent(null);
           }}
           onSubmit={handleEventSubmit}
           event={selectedEvent}
+          isNewEvent={!selectedEvent?.id}
         />
 
         {/* Event Details Dialog */}

@@ -13,7 +13,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import toast from 'react-hot-toast';
 
-const EventForm = ({ open, onClose, onSubmit, event = null }) => {
+const EventForm = ({ open, onClose, onSubmit, event = null, isNewEvent = false }) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -22,35 +22,60 @@ const EventForm = ({ open, onClose, onSubmit, event = null }) => {
     reminder_time: new Date(),
   });
 
-  // Reset form data when event prop changes
   useEffect(() => {
     if (event) {
-      setFormData({
-        title: event.title || '',
-        description: event.description || '',
-        start_time: new Date(event.start_time),
-        end_time: new Date(event.end_time),
-        reminder_time: event.reminder_time ? new Date(event.reminder_time) : new Date(),
-      });
+      try {
+        if (isNewEvent) {
+          setFormData({
+            title: '',
+            description: '',
+            start_time: new Date(event.start_time),
+            end_time: new Date(event.end_time),
+            reminder_time: new Date(event.reminder_time),
+          });
+        } else {
+          setFormData({
+            title: event.title || '',
+            description: event.description || '',
+            start_time: new Date(event.start_time),
+            end_time: new Date(event.end_time),
+            reminder_time: event.reminder_time ? 
+              new Date(event.reminder_time) : 
+              new Date(event.start_time.getTime() - 30 * 60000),
+          });
+        }
+      } catch (error) {
+        console.error('Error setting form data:', error);
+        resetForm();
+      }
     } else {
-      // Reset form for new event
-      const now = new Date();
-      const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
-      setFormData({
-        title: '',
-        description: '',
-        start_time: now,
-        end_time: oneHourLater,
-        reminder_time: now,
-      });
+      resetForm();
     }
-  }, [event, open]);
+  }, [event, open, isNewEvent]);
+
+  const resetForm = () => {
+    const now = new Date();
+    const oneHourLater = new Date(now.getTime() + 60 * 60000);
+    setFormData({
+      title: '',
+      description: '',
+      start_time: now,
+      end_time: oneHourLater,
+      reminder_time: now,
+    });
+  };
 
   const [loading, setLoading] = useState(false);
 
   const validateForm = () => {
     if (!formData.title.trim()) {
       toast.error('Title is required');
+      return false;
+    }
+
+    const now = new Date();
+    if (formData.start_time < now) {
+      toast.error('Start time cannot be in the past');
       return false;
     }
 
@@ -98,7 +123,7 @@ const EventForm = ({ open, onClose, onSubmit, event = null }) => {
       }}
     >
       <DialogTitle>
-        {event ? 'Edit Event' : 'Create Event'}
+        {isNewEvent ? 'Create Event' : 'Edit Event'}
       </DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent sx={{ overflowY: 'visible' }}>
@@ -175,7 +200,7 @@ const EventForm = ({ open, onClose, onSubmit, event = null }) => {
             variant="contained" 
             disabled={loading}
           >
-            {loading ? 'Saving...' : event ? 'Update' : 'Create'}
+            {loading ? 'Saving...' : isNewEvent ? 'Create' : 'Update'}
           </Button>
         </DialogActions>
       </form>
