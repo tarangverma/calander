@@ -148,15 +148,6 @@ export const eventService = {
     }
   },
 
-  // New method for bulk operations
-  bulkCreateEvents: async (events) => {
-    try {
-      const response = await api.post('/events/bulk', events);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
-  }
 };
 
 // Helper function to check if token exists and is valid

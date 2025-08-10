@@ -4,7 +4,6 @@ const helmet = require('helmet');
 const compression = require('compression');
 const userRoutes = require('./routes/userRoutes');
 const eventRoutes = require('./routes/eventRoutes');
-const reminderService = require('./services/reminderService');
 const initDatabase = require('./config/init');
 require('dotenv').config();
 
@@ -34,8 +33,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Something went wrong!' });
 });
 
-// Initialize reminder service
-reminderService.init();
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

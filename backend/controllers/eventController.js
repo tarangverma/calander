@@ -6,7 +6,22 @@ const eventController = {
             const { title, description, start_time, end_time, reminder_time } = req.body;
             const userId = req.user.id;
 
-            console.log('Creating event:', { title, start_time, end_time }); // Debug log
+           // console.log('Creating event:', { title, start_time, end_time }); // Debug log
+
+            // Sanity checks to avoid FK violations and provide clearer errors
+            if (!userId) {
+                return res.status(401).json({ error: 'Unauthorized: missing user context' });
+            }
+
+            const { rows: userRows } = await pool.query(
+                'SELECT id FROM people WHERE id = $1',
+                [userId]
+            );
+            if (userRows.length === 0) {
+                return res.status(401).json({ error: 'User not found. Please log in again.' });
+            }
+
+            console.log('Attempting to create event for user_id:', userId);
 
             const result = await pool.query(
                 `INSERT INTO events 
@@ -16,11 +31,11 @@ const eventController = {
                 [userId, title, description, start_time, end_time, reminder_time]
             );
 
-            console.log('Created event:', result.rows[0]); // Debug log
+        //    console.log('Created event:', result.rows[0]); // Debug log
             res.status(201).json(result.rows[0]);
         } catch (error) {
             console.error('Create event error:', error);
-            res.status(500).json({ error: error.message });
+            res.status(500).json({ error: `Create event failed: ${error.message}` });
         }
     },
 
@@ -37,7 +52,7 @@ const eventController = {
                 [userId]
             );
 
-            console.log('Fetched events:', result.rows); // Debug log
+          //  console.log('Fetched events:', result.rows); // Debug log
             res.json(result.rows);
         } catch (error) {
             console.error('Get events error:', error);

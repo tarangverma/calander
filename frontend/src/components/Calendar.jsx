@@ -148,13 +148,27 @@ const Calendar = () => {
 
   return (
     <>
-      <AppBar position="static" sx={{ mb: 2 }}>
+      <AppBar position="static" sx={{ 
+        mb: 2,
+        background: 'linear-gradient(45deg, #1976d2 30%, #21CBF3 90%)',
+        boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)'
+      }}>
         <Toolbar sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="h6">Calendar App</Typography>
+          <Typography variant="h6" sx={{ 
+            fontWeight: 'bold',
+            letterSpacing: '1px'
+          }}>
+            Calendar App
+          </Typography>
           <Button 
             color="inherit" 
             onClick={handleLogout}
             startIcon={<LogoutIcon />}
+            sx={{
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+              }
+            }}
           >
             Logout
           </Button>
@@ -162,14 +176,27 @@ const Calendar = () => {
       </AppBar>
 
       <Container maxWidth="lg">
-        <Box sx={{ mt: 4 }}>
+        <Box sx={{ 
+          mt: 4,
+          p: 3,
+          backgroundColor: 'white',
+          borderRadius: 2,
+          boxShadow: '0 0 15px rgba(0,0,0,0.1)'
+        }}>
           <Button
             variant="contained"
             onClick={() => {
               setSelectedEvent(null);
               setIsFormOpen(true);
             }}
-            sx={{ mb: 2 }}
+            sx={{ 
+              mb: 3,
+              background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+              boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #1976d2 30%, #21CBF3 90%)'
+              }
+            }}
           >
             Create Event
           </Button>
@@ -195,15 +222,22 @@ const Calendar = () => {
             }}
             eventContent={(eventInfo) => (
               <Box sx={{ 
-                p: '2px 4px', 
+                p: '4px 8px',
+                borderRadius: '4px',
+                background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                color: 'white',
                 cursor: 'pointer',
-                '&:hover': { opacity: 0.9 }
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 2px 4px rgba(33, 203, 243, .3)'
+                }
               }}>
-                <Typography variant="subtitle2" noWrap>
+                <Typography variant="subtitle2" noWrap sx={{ fontWeight: 'bold' }}>
                   {eventInfo.event.title}
                 </Typography>
                 {eventInfo.timeText && (
-                  <Typography variant="caption" display="block">
+                  <Typography variant="caption" display="block" sx={{ opacity: 0.9 }}>
                     {eventInfo.timeText}
                   </Typography>
                 )}
