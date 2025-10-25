@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Button, Container, Typography, AppBar, Toolbar } from '@mui/material';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -12,17 +13,16 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import { useAuth } from '../context/AuthContext';
 
 const Calendar = () => {
-  const {logout} = useAuth();
+  const { logout } = useAuth();
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   // Fetch events when component mounts
   const fetchEvents = async () => {
     try {
-      setLoading(true);
       const response = await eventService.getEvents();
       // Transform the events data to match FullCalendar's format
       const formattedEvents = response.map(event => ({
@@ -39,7 +39,6 @@ const Calendar = () => {
       console.error('Error fetching events:', error);
       toast.error('Failed to load events');
     } finally {
-      setLoading(false);
     }
   };
 
@@ -144,6 +143,7 @@ const Calendar = () => {
 
   const handleLogout = () => {
     logout();
+    navigate('/');
   };
 
   return (
