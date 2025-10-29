@@ -148,6 +148,50 @@ export const eventService = {
     }
   },
 
+  // New method for sending email invites
+  sendEmailInvites: async (eventId) => {
+    try {
+      const response = await api.post(`/events/${eventId}/send-invites`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Alternative method if you're using the body-based route
+  // sendEmailInvites: async (eventId, emailData = {}) => {
+  //   try {
+  //     const response = await api.post('/events/send-invites', {
+  //       eventId,
+  //       ...emailData
+  //     });
+  //     return response.data;
+  //   } catch (error) {
+  //     throw error.response?.data || error;
+  //   }
+  // },
+};
+
+// Email services (if you want separate email functionality)
+export const emailService = {
+  sendEventInvites: async (eventId) => {
+    try {
+      const response = await api.post(`/events/${eventId}/send-invites`);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // If you need to send custom emails
+  sendCustomEmail: async (emailData) => {
+    try {
+      const response = await api.post('/email/send', emailData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
 };
 
 // Helper function to check if token exists and is valid

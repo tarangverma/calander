@@ -19,10 +19,12 @@ const Calendar = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Fetch events when component mounts
   const fetchEvents = async () => {
     try {
+      setLoading(true);
       const response = await eventService.getEvents();
       // Transform the events data to match FullCalendar's format
       const formattedEvents = response.map(event => ({
@@ -32,6 +34,8 @@ const Calendar = () => {
         end: event.end_time,
         description: event.description,
         reminder_time: event.reminder_time,
+        location: event.location,
+        attendees: event.attendees || [],
         // Add any additional fields you need
       }));
       setEvents(formattedEvents);
@@ -39,6 +43,7 @@ const Calendar = () => {
       console.error('Error fetching events:', error);
       toast.error('Failed to load events');
     } finally {
+      setLoading(false);
     }
   };
 
@@ -48,16 +53,31 @@ const Calendar = () => {
 
   const handleEventSubmit = async (eventData) => {
     try {
+      let result;
+      
       // Check if it's a new event by checking for isNew flag
       if (selectedEvent && !selectedEvent.isNew) {
         // This is an update operation
-        await eventService.updateEvent(selectedEvent.id, eventData);
+        result = await eventService.updateEvent(selectedEvent.id, eventData);
         toast.success('Event updated successfully');
       } else {
         // This is a create operation
-        await eventService.createEvent(eventData);
+        result = await eventService.createEvent(eventData);
         toast.success('Event created successfully');
+        
+        // Send email invites for new events with attendees
+        if (eventData.attendees && eventData.attendees.length > 0) {
+          try {
+            await eventService.sendEmailInvites(result.id);
+            toast.success(`Invites sent to ${eventData.attendees.length} attendee(s)`);
+          } catch (emailError) {
+            console.error('Failed to send email invites:', emailError);
+            // Don't show error toast here as the event was created successfully
+            // Just log the error for debugging
+          }
+        }
       }
+      
       await fetchEvents(); // Refresh the events list
       setIsFormOpen(false);
       setSelectedEvent(null);
@@ -76,6 +96,8 @@ const Calendar = () => {
       start_time: event.start,
       end_time: event.end,
       reminder_time: event.extendedProps.reminder_time,
+      location: event.extendedProps.location,
+      attendees: event.extendedProps.attendees || [],
     });
     setIsDetailsOpen(true);
   };
@@ -114,6 +136,8 @@ const Calendar = () => {
       start_time: startTime,
       end_time: endTime,
       reminder_time: reminderTime,
+      location: '',
+      attendees: [],
       isNew: true
     };
 
@@ -139,6 +163,21 @@ const Calendar = () => {
   const handleEditClick = () => {
     setIsDetailsOpen(false);
     setIsFormOpen(true);
+  };
+
+  // New function to resend email invites
+  const handleResendInvites = async () => {
+    if (!selectedEvent) return;
+
+    try {
+      await eventService.sendEmailInvites(selectedEvent.id);
+      toast.success('Invites resent successfully');
+      setIsDetailsOpen(false);
+      setSelectedEvent(null);
+    } catch (error) {
+      console.error('Error resending invites:', error);
+      toast.error('Failed to resend invites');
+    }
   };
 
   const handleLogout = () => {
@@ -241,6 +280,11 @@ const Calendar = () => {
                     {eventInfo.timeText}
                   </Typography>
                 )}
+                {eventInfo.event.extendedProps.attendees && eventInfo.event.extendedProps.attendees.length > 0 && (
+                  <Typography variant="caption" display="block" sx={{ opacity: 0.9 }}>
+                    👥 {eventInfo.event.extendedProps.attendees.length}
+                  </Typography>
+                )}
               </Box>
             )}
           />
@@ -267,6 +311,7 @@ const Calendar = () => {
             }}
             onEdit={handleEditClick}
             onDelete={handleEventDelete}
+            onResendInvites={handleResendInvites}
           />
         </Box>
       </Container>

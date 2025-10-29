@@ -7,6 +7,7 @@ const { validateEvent } = require('../middleware/validation');
 router.use(auth); // Protect all routes
 
 router.post('/', validateEvent, eventController.createEvent);
+router.post('/:eventId/send-invites', eventController.sendEmailInvites);
 router.get('/', eventController.getEvents);
 router.get('/:id', eventController.getEvent);
 router.put('/:id', validateEvent, eventController.updateEvent);
